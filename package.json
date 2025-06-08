@@ -1,0 +1,31 @@
+{
+  "name": "stackpilot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "description": "CLI to generate production-ready Next.js templates with theming, auth, payments, CI/CD, and more",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "cli",
+    "nextjs",
+    "template",
+    "stackpilot",
+    "init"
+  ],
+  "author": "Ankit Biswas",
+  "license": "MIT",
+  "bin": {
+    "stackpilot": "./index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
+    "axios": "^1.9.0",
+    "chalk": "^4.1.2",
+    "fs-extra": "^11.3.0",
+    "inquirer": "^8.2.6",
+    "ora": "^8.2.0",
+    "prompts": "^2.4.2"
+  }
+}
