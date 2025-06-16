@@ -1,6 +1,0 @@
-{
-    "dependencies": {
-        "next-auth":"^4.24.10",
-        "prisma":"^5.10.0"
-    }
-}

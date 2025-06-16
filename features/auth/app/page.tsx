@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { RocketIcon, PaletteIcon, ShieldCheckIcon } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LoginButton } from "@/app/components/auth/login-button";
 
 export default function HomePage() {
   return (
@@ -26,6 +27,9 @@ export default function HomePage() {
             <Button size="lg">Get Started</Button>
             <Button size="lg" variant="outline">GitHub Repo</Button>
           </div>
+          <LoginButton mode="redirect">
+            <Button size="lg">Login</Button>
+          </LoginButton>
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
