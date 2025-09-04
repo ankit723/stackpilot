@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// From auth feature
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  name                  String?
+  email                 String                 @unique
+  password              String?
+  emailVerified         DateTime?
+  image                 String?
+  role                  UserRole               @default(USER)
+  accounts              Account[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  orders                Order[]
+  addresses             Address[]
+  isTwoFactorEnabled    Boolean                @default(false)
+  twoFactorConfirmation TwoFactorConfirmation?
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String   @unique
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String   @unique
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorToken {
+  id      String   @id @default(cuid())
+  email   String   @unique
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorConfirmation {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Image {
+  id             String           @id @default(cuid())
+  url            String
+  product        Product[]        @relation("ProductImages")
+  category       Category[]
+  Product        Product[]
+}
+
+model FilterGroup {
+  id        String    @id @default(cuid())
+  name      String
+  filters   Filter[]
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Filter {
+  id            String         @id @default(cuid())
+  name          String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  options       FilterOption[]
+  filterGroupId String?
+  filterGroup   FilterGroup?   @relation(fields: [filterGroupId], references: [id], onDelete: Cascade)
+}
+
+model FilterOption {
+  id              String           @id @default(cuid())
+  value           String
+  filterId        String
+  filter          Filter           @relation(fields: [filterId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  productFilterOption ProductFilterOption[]
+}
+
+enum ProductType {
+  SIMPLE
+  CONFIGURABLE
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Product {
+  id            String           @id @default(cuid())
+  name          String
+  slug          String           @unique
+  sku           String           @unique
+  description   String?
+  price         Int              @default(0)
+  stock         Int              @default(0)
+  inventoryLogs InventoryLog[]
+  status        ProductStatus    @default(DRAFT)
+  thumbnailId   String?
+  thumbnail     Image?           @relation(fields: [thumbnailId], references: [id], onDelete: Cascade)
+  images        Image[]          @relation("ProductImages")
+
+  parentId      String?
+  parent        Product?         @relation("ProductHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children      Product[]        @relation("ProductHierarchy")
+  
+
+  type ProductType @default(SIMPLE)
+
+  productFilterOptions ProductFilterOption[]
+  categoryId    String
+  category      Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  filterGroupId String
+  filterGroup   FilterGroup      @relation(fields: [filterGroupId], references: [id], onDelete: Cascade)
+  tags          ProductTag[]
+  orderItems    OrderItem[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model ProductFilterOption {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  filterOptionId String
+  filterOption FilterOption @relation(fields: [filterOptionId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt 
+
+  @@unique([productId, filterOptionId])
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  viewCount Int        @default(0)
+  imageId   String?
+  image     Image?     @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Category?  @relation("ParentCategory", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Category[] @relation("ParentCategory")
+  products  Product[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  products  ProductTag[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model ProductTag {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status            OrderStatus @default(PENDING)
+  totalAmount       Decimal     @db.Decimal(10, 2)
+  items             OrderItem[]
+  shippingAddressId String?
+  shippingAddress   Address?    @relation(fields: [shippingAddressId], references: [id])
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model OrderItem {
+  id               String          @id @default(cuid())
+  orderId          String
+  productId        String
+  productVariantId String?
+  product          Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity         Int
+  price            Decimal         @db.Decimal(10, 2) // price at time of purchase
+  total            Decimal         @db.Decimal(10, 2)
+  order            Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  name       String // e.g., "Home", "Office"
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  phone      String
+  orders     Order[]
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum InventoryReason {
+  ORDER
+  RETURN
+  CANCELLED
+  RESTOCK
+  ADJUSTMENT
+}
+
+model InventoryLog {
+  id        String  @id @default(cuid())
+  productId String?
+
+  product Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  change    Int
+  reason    InventoryReason
+  createdAt DateTime        @default(now())
+}

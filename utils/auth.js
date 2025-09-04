@@ -2,10 +2,12 @@ const inquirer = require("inquirer");
 const { createClient } = require("@supabase/supabase-js");
 const chalk = require("chalk");
 
-const SUPABASE_URL = "https://bslwgxmivwokvlfadqcw.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzbHdneG1pdndva3ZsZmFkcWN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4NDYyNjgsImV4cCI6MjA2NDQyMjI2OH0.Co-FjNFn1Gh6RvU_M043xOAwp94dpdID6i5Gf15-KHg";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const NEXT_PUBLIC_SUPABASE_URL = "https://qgcvlvzebzyhehuaiiru.supabase.co";
+const NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnY3ZsdnplYnp5aGVodWFpaXJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMDkyMDcsImV4cCI6MjA1OTU4NTIwN30.Bp0kzwdMDRUu5GjP8xol6qF7_wAA85kE8WYyuTfwbBQ";
+
+
+const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 const loginUser = async () => {
   const { email, password } = await inquirer.prompt([
@@ -35,7 +37,7 @@ const loginUser = async () => {
 
   const userId = authData.user.id;
 
-  console.log(userId);
+  console.log(authData.user);
 
   // Step 2: Fetch user subscription status from DB
   const { data: userDetails, error: userError } = await supabase
@@ -46,6 +48,7 @@ const loginUser = async () => {
 
   if (userError) {
     console.error(chalk.red("❌ Failed to fetch user details:"), userError.message);
+    console.log(userDetails)
     process.exit(1);
   }
 
